@@ -5,6 +5,7 @@ import java.util.*;
 public class Main {
     public static ArrayList<Participant>  dataList=new ArrayList<>();
     public static  String[] heading=new String[8];
+    public static Set<String> uniqueGames;
 
     public static void main(String[] args) {
         loadData();
@@ -17,9 +18,6 @@ public class Main {
         String filePath= "data/participants_sample.csv";
         ArrayList<String[]> temp=new ArrayList<>();
         ArrayList<String> games=new ArrayList<>();
-
-
-
 
         try{
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -41,7 +39,8 @@ public class Main {
             dataList.add(new Participant(data));
         }
         System.out.println("File read successfully");
-        final Set<String> uniqueGames=new HashSet<>(games);
+        uniqueGames=new HashSet<>(games);
+        //System.out.println(uniqueGames.toString());
     }
 
 
