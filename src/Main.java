@@ -9,6 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
         loadData();
+        addParticipant();
         saveData();
     }
 
@@ -60,6 +61,28 @@ public class Main {
         }catch (IOException e) {
             System.out.println("IO Error");
         }
+    }
+
+
+    public static void addParticipant(){
+        System.out.println("Adding participant to data list");
+        String[] data=new String[8];
+        Scanner sc=new Scanner(System.in);
+        System.out.print("Enter Id:- ");
+        String id=sc.nextLine();
+        System.out.print("Enter Name:- ");
+        String name=sc.nextLine();
+        System.out.print("Enter Email:- ");
+        String email=sc.nextLine();
+        System.out.print("Enter Preferred Game:- ");
+        String preferredGame=sc.nextLine();
+        System.out.print("Enter Skill Level:- ");
+        int skillLevel=Integer.parseInt(sc.nextLine());
+        System.out.print("Enter preferred Role:- ");
+        String preferredRole=sc.nextLine();
+        System.out.print("Enter Personality Score:- ");
+        int personalityScore=Integer.parseInt(sc.nextLine());
+        dataList.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
 
     }
 }
