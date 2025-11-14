@@ -7,8 +7,8 @@ public class Participant {
     private String preferredGame;
     private int skillLevel;
     private String preferredRole;
-    private int personalityScore;
-    private PersonalityType personalityType;
+    private final int personalityScore;
+    private final PersonalityType personalityType;
 
     public Participant(String[] data) {
         this.id = data[0];
@@ -92,12 +92,7 @@ public class Participant {
         this.preferredRole = preferredRole;
     }
 
-    public void setPersonalityScore(int personalityScore) {
-        this.personalityScore = personalityScore;
-    }
-    public void setPersonalityType(int personalityScore) {
-        this.personalityType = PersonalityType.getPersonalityType(personalityScore);
-    }
+
     public String[] toArray(){
         String[] data = new String[8];
         data[0] = this.id;
