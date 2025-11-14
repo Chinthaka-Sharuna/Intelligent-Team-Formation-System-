@@ -5,7 +5,7 @@ import java.util.*;
 public class Main {
     public static ArrayList<Participant>  dataList=new ArrayList<>();
     public static  String[] heading=new String[8];
-    public static Set<String> uniqueGames;
+    public static String[] uniqueGames;
 
     public static void main(String[] args) {
         loadData();
@@ -40,8 +40,9 @@ public class Main {
             dataList.add(new Participant(data));
         }
         System.out.println("File read successfully");
-        uniqueGames=new HashSet<>(games);
-        //System.out.println(uniqueGames.toString());
+        Set<String> uniqueSet = new HashSet<>(games.subList(1,games.size()));  //to remove the column value
+        uniqueGames=uniqueSet.toArray(new String[0]);
+        System.out.println(uniqueGames.toString());
     }
 
 
@@ -71,11 +72,19 @@ public class Main {
         System.out.print("Enter Id:- ");
         String id=sc.nextLine();
         System.out.print("Enter Name:- ");
-        String name=sc.nextLine();
+        String name=capitalizerName(sc.nextLine());
+        System.out.println(name);
         System.out.print("Enter Email:- ");
         String email=sc.nextLine();
-        System.out.print("Enter Preferred Game:- ");
-        String preferredGame=sc.nextLine();
+        /*
+        while (!isEmailValid(email)){
+            System.out.println("Invalid Email");
+            System.out.print("Renter the Email :- ");
+            email=sc.nextLine();
+        }
+        */
+        String preferredGame=getPreferredGame();
+        System.out.println(preferredGame);
         System.out.print("Enter Skill Level:- ");
         int skillLevel=Integer.parseInt(sc.nextLine());
         System.out.print("Enter preferred Role:- ");
@@ -84,5 +93,42 @@ public class Main {
         int personalityScore=Integer.parseInt(sc.nextLine());
         dataList.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
 
+    }
+
+    public static String capitalizerName(String name){
+        String[] temp=name.split(" ");
+        //System.out.println(Arrays.toString(temp));
+        name="";
+        for(int i=0;i<temp.length;i++){
+            //System.out.println(temp[i].length());
+            if (temp[i].isEmpty()){
+                continue;
+            }
+            //System.out.println(temp[i]);
+            temp[i]=temp[i].substring(0,1).toUpperCase() + temp[i].substring(1).toLowerCase();
+        }
+        //System.out.println(Arrays.toString(temp));
+        return String.join(" ",temp);
+    }
+
+    public static boolean isEmailValid(String email){
+        final String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
+        if (email==null || email.isEmpty()){
+            return false;
+        }
+        return email.matches(emailRegex);
+    }
+
+    public static String getPreferredGame(){
+        Scanner sc=new Scanner(System.in);
+        for(int i=1;i<=uniqueGames.length;i++){
+            System.out.println("        "+i+". "+uniqueGames[i-1]);
+        }
+        System.out.print("Enter Preferred Game number :- ");
+        int preferredGameNum=sc.nextInt();
+        return uniqueGames[preferredGameNum-1];
+    }
+
+    public static void getPersonalityScore(){
     }
 }
