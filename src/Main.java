@@ -228,21 +228,4 @@ public class Main {
         return skilllevel;
     }
 
-    public static int getTeamCount(){
-        Scanner sc=new Scanner(System.in);
-        int teamCount;
-        while(true){
-            try{
-                teamCount=sc.nextInt();
-                if((teamCount<2)&&(teamCount>0)) {
-                    System.out.println("Invalid input (input must be between 0 and 2)");
-                    continue;
-                }
-                break;
-            }catch (NumberFormatException | InputMismatchException e) {
-                System.out.println("Input must be a number");
-            }
-        }
-        return teamCount;
-    }
 }
