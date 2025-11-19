@@ -61,8 +61,8 @@ public class Participant {
         return personalityScore;
     }
 
-    public PersonalityType getPersonalityType() {
-        return personalityType;
+    public String getPersonalityType() {
+        return String.valueOf(personalityType);
     }
 
 

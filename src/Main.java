@@ -1,17 +1,22 @@
 import DataModels.Participant;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class Main {
-    public static ArrayList<Participant>  dataList=new ArrayList<>();
+    public static ArrayList<Participant>  participants=new ArrayList<>();
     public static  String[] heading=new String[8];
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
+    public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
+    public static HashMap<String,ArrayList<Participant>> groupedParticipants=new HashMap<>();
 
     public static void main(String[] args) {
         loadData();
-        addParticipant();
-        saveData();
+        //System.out.print("Team count is "+getTeamCount());
+        //addParticipant();
+        //saveData();
+        groupParticipant();
     }
 
 
@@ -21,6 +26,7 @@ public class Main {
         ArrayList<String[]> temp=new ArrayList<>();
         ArrayList<String> games=new ArrayList<>();
         ArrayList<String> roles=new ArrayList<>();
+
 
         try{
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -40,13 +46,13 @@ public class Main {
         heading = temp.get(0);
         temp.remove(0);
         for(String[] data:temp){
-            dataList.add(new Participant(data));
+            participants.add(new Participant(data));
         }
         System.out.println("File read successfully");
         Set<String> uniqueSet = new HashSet<>(games.subList(1,games.size()));  //to remove the column value (concatenation)
         Set<String> uniquePreferredRoleSet = new HashSet<>(roles.subList(1,roles.size()));  //to remove the column value (concatenation)
         uniqueGames=uniqueSet.toArray(new String[0]);
-        System.out.println(uniqueGames.toString());   //to get unique games values
+        //System.out.println(Arrays.toString(uniqueGames));   //to get unique games values
         uniquePreferredRole=uniquePreferredRoleSet.toArray(new String[0]); //to get unique roles values
     }
 
@@ -57,7 +63,7 @@ public class Main {
         try (BufferedWriter writer=new BufferedWriter(new FileWriter(filePath))){
             writer.write(String.join(",",heading));
             writer.newLine();
-            for(Participant data:dataList){
+            for(Participant data:participants){
                 writer.write(String.join(",",data.toArray()));
                 writer.newLine();
             }
@@ -91,7 +97,7 @@ public class Main {
         int skillLevel=getSkillLevel();
         String preferredRole=getPreferredRole();
         int personalityScore=getPersonalityScore();
-        dataList.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
+        participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
 
     }
 
@@ -204,7 +210,7 @@ public class Main {
     }
 
     public static String getNewId(){
-        return "P"+String.format("%03d",dataList.size()+1);
+        return "P"+String.format("%03d",participants.size()+1);
     }
 
     public static int getSkillLevel(){
@@ -230,19 +236,50 @@ public class Main {
 
     public static int getTeamCount(){
         Scanner sc=new Scanner(System.in);
+        System.out.print("Enter Team Count:- ");
         int teamCount;
         while(true){
             try{
-                teamCount=sc.nextInt();
-                if((teamCount==1)&&(teamCount>0)) {
-                    System.out.println("Invalid input (input must be between 0 and 2)");
+                teamCount=Integer.parseInt(sc.nextLine());
+                if((teamCount < 2)) {
+                    System.out.println("Invalid input (Team count must be greater than or equal to 2)");
+                    System.out.println("Please Re-enter a valid team count :- ");
                     continue;
                 }
                 break;
             }catch (NumberFormatException | InputMismatchException e) {
                 System.out.println("Input must be a number");
             }
+            System.out.print("Please Re-enter a valid team count :- ");
         }
         return teamCount;
     }
+
+    public static void groupParticipant(){
+        for(int i=0;i<uniquePersonalityType.length;i++){
+            System.out.println(uniquePersonalityType[i]);
+            groupedParticipants.put(uniquePersonalityType[i],findParticipants(uniquePersonalityType[i]) );
+            /*for (String key : groupedParticipants.keySet()) {
+                System.out.println(key);
+                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
+            }*/
+        }
+        System.out.println("Grouped");
+
+    }
+
+    public static ArrayList<Participant> findParticipants(String personalityType){
+        ArrayList<Participant> temp=new ArrayList<>();
+        for(int i=0;i<participants.size();i++){
+            //System.out.println(Arrays.toString(participants.get(i).toArray()));
+            if(participants.get(i).getPersonalityType().equals(personalityType)){
+                temp.add(participants.get(i));
+            }
+        }
+        for(int i=0;i<temp.size();i++){
+            System.out.println(Arrays.toString(temp.get(i).toArray()));
+        }
+        return temp;
+    }
+
 }
