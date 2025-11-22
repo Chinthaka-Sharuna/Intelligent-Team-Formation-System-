@@ -1,6 +1,4 @@
-import DataModels.Participant;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class Main {
@@ -10,24 +8,27 @@ public class Main {
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
     public static HashMap<String,ArrayList<Participant>> groupedParticipants=new HashMap<>();
+    public static Scanner sc=new Scanner(System.in);
 
     public static void main(String[] args) {
-        loadData();
+
+        loadData("data/participants_sample.csv");
         //System.out.print("Team count is "+getTeamCount());
         //addParticipant();
         //saveData();
         groupParticipant();
+        TeamBuilder tb=new TeamBuilder();
+        tb.TeamCreation();
+
     }
 
 
     //Read the csv file
-    public static void loadData(){
-        String filePath= "data/participants_sample.csv";
+
+    public static void loadData(String filePath){
         ArrayList<String[]> temp=new ArrayList<>();
         ArrayList<String> games=new ArrayList<>();
         ArrayList<String> roles=new ArrayList<>();
-
-
         try{
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
@@ -56,7 +57,6 @@ public class Main {
         uniquePreferredRole=uniquePreferredRoleSet.toArray(new String[0]); //to get unique roles values
     }
 
-
     public static void saveData(){
         String filePath= "data/participants_sample.csv";
         ArrayList<String[]> temp=new ArrayList<>();
@@ -79,7 +79,6 @@ public class Main {
     public static void addParticipant(){
         System.out.println("Adding participant to data list");
         String[] data=new String[8];
-        Scanner sc=new Scanner(System.in);
         String id=getNewId();
         System.out.println("Your ID is "+id);
         System.out.print("Enter Name:- ");
@@ -97,7 +96,11 @@ public class Main {
         int skillLevel=getSkillLevel();
         String preferredRole=getPreferredRole();
         int personalityScore=getPersonalityScore();
-        participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
+        try{
+            participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
+        }catch (IllegalArgumentException e){
+            System.out.println("Invalid Input");
+        }
 
     }
 
@@ -126,7 +129,6 @@ public class Main {
     }
 
     public static String getPreferredGame() {
-        Scanner sc = new Scanner(System.in);
         System.out.println("Enter a Game between among these");
         for (int i = 1; i <= uniqueGames.length; i++) {
             System.out.println("        " + i + ". " + uniqueGames[i - 1]);
@@ -168,24 +170,23 @@ public class Main {
     }
 
     public static float validatePersonalScore(){
-        Scanner sc=new Scanner(System.in);
         while(true){
             try {
-                double value = sc.nextDouble();
+                double value = Integer.parseInt(sc.nextLine());
                 if (value >= 1 && value <= 5) {
                     return (float) value;
                 }
                 System.out.println("Personal Score is out of range.It must be between 1 and 5.");
                 System.out.println("Please enter a valid personal score :- ");
-            }catch (InputMismatchException e){
-                System.out.println("Please enter a valid personal score (Score must be a number):- ");
+            }catch (NumberFormatException e){
+                System.out.println("Please enter a valid personal score (Score must be a number)");
+                System.out.print("Please enter a valid personal score :- ");
             }
         }
     }
 
     public static String getPreferredRole(){
         System.out.println("------ Preferred Role ------");
-        Scanner sc = new Scanner(System.in);
         System.out.println("Enter a Preferred Role between among these");
         for (int i = 1; i <= uniquePreferredRole.length; i++) {
             System.out.println("        " + i + ". " + uniquePreferredRole[i - 1]);
@@ -216,13 +217,11 @@ public class Main {
     public static int getSkillLevel(){
         System.out.print("Enter Skill Level:- ");
         int skilllevel;
-        Scanner sc = new Scanner(System.in);
         while (true) {
             try{
                 skilllevel= Integer.parseInt(sc.nextLine());
                 if (!(skilllevel >= 1 && skilllevel <= 10)) {
                     System.out.println("Invalid input (input must be between 1 and 10)");
-                    continue;
                 }
                 break;
             }catch (NumberFormatException | InputMismatchException e) {
@@ -234,31 +233,24 @@ public class Main {
         return skilllevel;
     }
 
-    public static int getTeamCount(){
-        Scanner sc=new Scanner(System.in);
-        System.out.print("Enter Team Count:- ");
-        int teamCount;
-        while(true){
-            try{
-                teamCount=Integer.parseInt(sc.nextLine());
-                if((teamCount < 2)) {
-                    System.out.println("Invalid input (Team count must be greater than or equal to 2)");
-                    System.out.println("Please Re-enter a valid team count :- ");
-                    continue;
-                }
-                break;
-            }catch (NumberFormatException | InputMismatchException e) {
-                System.out.println("Input must be a number");
-            }
-            System.out.print("Please Re-enter a valid team count :- ");
-        }
-        return teamCount;
-    }
+
+
+
 
     public static void groupParticipant(){
         for(int i=0;i<uniquePersonalityType.length;i++){
             System.out.println(uniquePersonalityType[i]);
-            groupedParticipants.put(uniquePersonalityType[i],findParticipants(uniquePersonalityType[i]) );
+            ArrayList<Participant> temp=new ArrayList<>();
+            for(int j=0;j<participants.size();j++){
+                //System.out.println(Arrays.toString(participants.get(i).toArray()));
+                if(participants.get(j).getPersonalityType().equals(uniquePersonalityType[i])){
+                    temp.add(participants.get(j));
+                }
+            }
+            for(int j=0;j<temp.size();j++){
+                System.out.println(Arrays.toString(temp.get(j).toArray()));
+            }
+            groupedParticipants.put(uniquePersonalityType[i],temp );
             /*for (String key : groupedParticipants.keySet()) {
                 System.out.println(key);
                 System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
@@ -268,18 +260,5 @@ public class Main {
 
     }
 
-    public static ArrayList<Participant> findParticipants(String personalityType){
-        ArrayList<Participant> temp=new ArrayList<>();
-        for(int i=0;i<participants.size();i++){
-            //System.out.println(Arrays.toString(participants.get(i).toArray()));
-            if(participants.get(i).getPersonalityType().equals(personalityType)){
-                temp.add(participants.get(i));
-            }
-        }
-        for(int i=0;i<temp.size();i++){
-            System.out.println(Arrays.toString(temp.get(i).toArray()));
-        }
-        return temp;
-    }
 
 }

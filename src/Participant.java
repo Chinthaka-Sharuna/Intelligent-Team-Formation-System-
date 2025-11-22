@@ -1,5 +1,3 @@
-package DataModels;
-
 public class Participant {
     private String id;
     private String name;
@@ -65,8 +63,6 @@ public class Participant {
         return String.valueOf(personalityType);
     }
 
-
-
     //Setters
     public void setId(String id) {
         this.id = id;
@@ -91,7 +87,6 @@ public class Participant {
     public void setPreferredRole(String preferredRole) {
         this.preferredRole = preferredRole;
     }
-
 
     public String[] toArray(){
         String[] data = new String[8];
