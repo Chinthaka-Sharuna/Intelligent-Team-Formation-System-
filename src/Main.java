@@ -7,8 +7,9 @@ public class Main {
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
-    public static HashMap<String,ArrayList<Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
     public static HashMap<String,ArrayList<Participant>> groupedParticipantsByGame=new HashMap<>();
+    //                    game name    PersonalityType
+    public static HashMap<String,HashMap<String,ArrayList<Participant>>> formattedMap=new HashMap<>();
     public static Scanner sc=new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -17,8 +18,9 @@ public class Main {
         //System.out.print("Team count is "+getTeamCount());
         //addParticipant();
         //saveData();
-        //groupParticipantByPersonalityType();
+        //-groupParticipantByPersonalityType();
         groupParticipantByGame();
+        //sortPlayersBySkill();
         TeamBuilder tb=new TeamBuilder();
         tb.teamCreation();
 
@@ -236,29 +238,6 @@ public class Main {
     }
 
 
-    public static void groupParticipantByPersonalityType(){
-        for(int i=0;i<uniquePersonalityType.length;i++){
-            System.out.println(uniquePersonalityType[i]);
-            ArrayList<Participant> temp=new ArrayList<>();
-            for(int j=0;j<participants.size();j++){
-                //System.out.println(Arrays.toString(participants.get(i).toArray()));
-                if(participants.get(j).getPersonalityType().equals(uniquePersonalityType[i])){
-                    temp.add(participants.get(j));
-                }
-            }
-            for(int j=0;j<temp.size();j++){
-                System.out.println(Arrays.toString(temp.get(j).toArray()));
-            }
-            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i],temp );
-            /*for (String key : groupedParticipants.keySet()) {
-                System.out.println(key);
-                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
-            }*/
-        }
-        System.out.println("Grouped By Personality Type");
-
-    }
-
     public static void groupParticipantByGame(){
         for(int i=0;i<uniqueGames.length;i++){
             System.out.println(uniqueGames[i]);
@@ -279,6 +258,48 @@ public class Main {
             }*/
         }
         System.out.println("Grouped By Games");
+        for(Map.Entry<String,ArrayList<Participant>> entry:groupedParticipantsByGame.entrySet()){
+            formattedMap.put(entry.getKey(),sortPlayersBySkill(groupParticipantByPersonalityType(entry.getValue())));
+        }
 
+    }
+
+    public static HashMap<String,ArrayList<Participant>> groupParticipantByPersonalityType(ArrayList<Participant> participantsArray){
+        HashMap<String,ArrayList<Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
+        for(int i=0;i<uniquePersonalityType.length;i++){
+            System.out.println(uniquePersonalityType[i]);
+            ArrayList<Participant> temp=new ArrayList<>();
+            for(int j=0;j<participantsArray.size();j++){
+                //System.out.println(Arrays.toString(participants.get(i).toArray()));
+                if(participantsArray.get(j).getPersonalityType().equals(uniquePersonalityType[i])){
+                    temp.add(participantsArray.get(j));
+                }
+            }
+            for(int j=0;j<temp.size();j++){
+                System.out.println(Arrays.toString(temp.get(j).toArray()));
+            }
+            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i],temp );
+            /*for (String key : groupedParticipants.keySet()) {
+                System.out.println(key);
+                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
+            }*/
+        }
+        System.out.println("Grouped By Personality Type");
+        return groupedParticipantsByPersonalityType;
+    }
+
+    public static HashMap<String,ArrayList<Participant>> sortPlayersBySkill(HashMap<String,ArrayList<Participant>> playerMap ) {
+        for (Map.Entry<String, ArrayList<Participant>> entry : playerMap.entrySet()) {
+            ArrayList<Participant> players = entry.getValue();
+            players.sort(Comparator.comparingInt(Participant::getSkillLevel).reversed());
+
+            System.out.println("Sorted players for " + entry.getKey() + " by skill level.");
+        }
+        for(Map.Entry<String, ArrayList<Participant>> entry : playerMap.entrySet()){
+            for(Participant p : entry.getValue()){
+                System.out.println(Arrays.toString(p.toArray()));
+            }
+        }
+        return playerMap;
     }
 }

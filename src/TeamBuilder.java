@@ -6,8 +6,11 @@ public class TeamBuilder {
     Scanner sc = Main.sc;
     final static HashMap<String,ArrayList<Participant>> groupedParticipantsByGame = Main.groupedParticipantsByGame;
     final static String[] uniqueGames=Main.uniqueGames;
-    private int TeamSize;
     private ArrayList <HashMap<String,Integer>> GroupsDetails=new ArrayList<>();
+    //                    game name    PersonalityType
+    public static HashMap<String,HashMap<String,ArrayList<Participant>>> formattedMap=Main.formattedMap;
+    private HashMap<String, Integer> totalCounts = new HashMap<>();
+
     static {
         minimumMemberCount.put("Chess",1);
         minimumMemberCount.put("CS:GO",5);
@@ -16,8 +19,21 @@ public class TeamBuilder {
         minimumMemberCount.put("Valorant",5);
         minimumMemberCount.put("FIFA",2);
     }
+
     public void teamCreation(){
-        createSubTeam();
+        String choise="";
+        do{
+            GroupsDetails.add(createSubTeam());
+            System.out.print("Do you want to create another new team?(yes/no) :- ");
+            try{
+                choise=sc.nextLine();
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+        }while(choise.equalsIgnoreCase("yes"));
+        getTotalPlayerCountPerGame();
+
+
     }
 
     private void isValidateTeamCount(String gameName, int memberCount){
@@ -79,6 +95,20 @@ public class TeamBuilder {
             return false;
         }
 
+    }
+
+    public void getTotalPlayerCountPerGame() {
+        for (HashMap<String, Integer> group : GroupsDetails) {
+            for (Map.Entry<String, Integer> entry : group.entrySet()) {
+                String game = entry.getKey();
+                int count = entry.getValue();
+                totalCounts.put(game, totalCounts.getOrDefault(game, 0) + count);
+            }
+        }
+        System.out.println("\n--- Total Players Requested Per Game ---");
+        for (Map.Entry<String, Integer> entry : totalCounts.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
     }
 
 
