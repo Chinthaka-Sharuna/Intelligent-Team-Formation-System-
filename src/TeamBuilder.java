@@ -10,6 +10,10 @@ public class TeamBuilder {
     //                    game name    PersonalityType
     public static HashMap<String,HashMap<String,ArrayList<Participant>>> formattedMap=Main.formattedMap;
     private HashMap<String, Integer> totalCounts = new HashMap<>();
+    private HashMap<String, ArrayList<Participant>> selectedPlayers = new HashMap<>();
+    ArrayList<Participant> selectedLeaders=new ArrayList<>();;
+    ArrayList<Participant> selectedThinkers=new ArrayList<>();
+    ArrayList<Participant> selectedBalanced=new ArrayList<>();
 
     static {
         minimumMemberCount.put("Chess",1);
@@ -24,6 +28,7 @@ public class TeamBuilder {
         String choise="";
         do{
             GroupsDetails.add(createSubTeam());
+            getTotalPlayerCountPerGame();
             System.out.print("Do you want to create another new team?(yes/no) :- ");
             try{
                 choise=sc.nextLine();
@@ -31,8 +36,9 @@ public class TeamBuilder {
                 System.out.println(e.getMessage());
             }
         }while(choise.equalsIgnoreCase("yes"));
-        getTotalPlayerCountPerGame();
-
+        printTotalPlayerCountPerGame();
+        allocatePlayers();
+        System.out.println("over");
 
     }
 
@@ -43,7 +49,7 @@ public class TeamBuilder {
         }
     }
 
-    public HashMap<String,Integer> createSubTeam(){
+    private HashMap<String,Integer> createSubTeam(){
         System.out.println("If you dont want add player for particular game enter 0");
         System.out.println("If you want to Terminate Team Create type 'exits'");
         System.out.println("If you want to Re-enter All values type 'reset' ");
@@ -87,17 +93,17 @@ public class TeamBuilder {
         return null;
     }
 
-    public Boolean isAvaliablePlayers(String GameName,Integer playerCount){
-        if (groupedParticipantsByGame.get(GameName).size()>=playerCount){
+    private Boolean isAvaliablePlayers(String GameName,Integer playerCount){
+        if (groupedParticipantsByGame.get(GameName).size()>=playerCount+totalCounts.getOrDefault(GameName,0)){
             return true;
         }else {
-            System.out.println("Cant Allocate "+playerCount+" Players There is only "+groupedParticipantsByGame.get(GameName).size()+" Players");
+            System.out.println("Cant Allocate "+playerCount+" Players There is only "+(groupedParticipantsByGame.get(GameName).size()-totalCounts.getOrDefault(GameName,0))+" Players");
             return false;
         }
 
     }
 
-    public void getTotalPlayerCountPerGame() {
+    private void getTotalPlayerCountPerGame() {
         for (HashMap<String, Integer> group : GroupsDetails) {
             for (Map.Entry<String, Integer> entry : group.entrySet()) {
                 String game = entry.getKey();
@@ -105,11 +111,54 @@ public class TeamBuilder {
                 totalCounts.put(game, totalCounts.getOrDefault(game, 0) + count);
             }
         }
+    }
+    private void printTotalPlayerCountPerGame(){
         System.out.println("\n--- Total Players Requested Per Game ---");
         for (Map.Entry<String, Integer> entry : totalCounts.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }
     }
 
+    private void allocatePlayers(){
 
+        for (Map.Entry<String, Integer> entry : totalCounts.entrySet()) {
+            //System.out.println(entry.getKey()+": "+entry.getValue());
+            for(Map.Entry<String,ArrayList<Participant>> entry2:formattedMap.get(entry.getKey()).entrySet()){
+                selectedLeaders.addAll(getLeaders(entry2.getValue()));
+                selectedThinkers.addAll(getThinkers(entry2.getValue()));
+                selectedBalanced.addAll(getBalanced(entry2.getValue()));
+            }
+        }
+    }
+
+
+    private ArrayList<Participant> getLeaders(ArrayList<Participant> playerArrayList){
+        int teamCount=GroupsDetails.size();
+        if(teamCount<playerArrayList.size()){
+            return new ArrayList<>(playerArrayList.subList(0, teamCount));
+        }
+        return playerArrayList;
+    }
+
+    private ArrayList<Participant> getThinkers(ArrayList<Participant> playerArrayList) {
+        int teamCount = GroupsDetails.size();
+        int neededCount = teamCount * 2;
+        if (neededCount < playerArrayList.size()) {
+            return new ArrayList<>(playerArrayList.subList(0, neededCount));
+        }
+        return playerArrayList;
+    }
+
+    private ArrayList<Participant> getBalanced(ArrayList<Participant> playerArrayList) {
+        int teamCount=GroupsDetails.size();
+        int neededCount=0;
+        for(int playerCount:totalCounts.values()){
+            neededCount+=playerCount;
+        }
+        neededCount = neededCount - (teamCount * 2);
+        if (neededCount < playerArrayList.size()) {
+            return new ArrayList<>(playerArrayList.subList(0, neededCount));
+        }
+        return playerArrayList;
+    }
 }
