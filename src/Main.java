@@ -7,7 +7,8 @@ public class Main {
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
-    public static HashMap<String,ArrayList<Participant>> groupedParticipants=new HashMap<>();
+    public static HashMap<String,ArrayList<Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
+    public static HashMap<String,ArrayList<Participant>> groupedParticipantsByGame=new HashMap<>();
     public static Scanner sc=new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -16,9 +17,10 @@ public class Main {
         //System.out.print("Team count is "+getTeamCount());
         //addParticipant();
         //saveData();
-        groupParticipant();
+        //groupParticipantByPersonalityType();
+        groupParticipantByGame();
         TeamBuilder tb=new TeamBuilder();
-        tb.TeamCreation();
+        tb.teamCreation();
 
     }
 
@@ -234,10 +236,7 @@ public class Main {
     }
 
 
-
-
-
-    public static void groupParticipant(){
+    public static void groupParticipantByPersonalityType(){
         for(int i=0;i<uniquePersonalityType.length;i++){
             System.out.println(uniquePersonalityType[i]);
             ArrayList<Participant> temp=new ArrayList<>();
@@ -250,15 +249,36 @@ public class Main {
             for(int j=0;j<temp.size();j++){
                 System.out.println(Arrays.toString(temp.get(j).toArray()));
             }
-            groupedParticipants.put(uniquePersonalityType[i],temp );
+            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i],temp );
             /*for (String key : groupedParticipants.keySet()) {
                 System.out.println(key);
                 System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
             }*/
         }
-        System.out.println("Grouped");
+        System.out.println("Grouped By Personality Type");
 
     }
 
+    public static void groupParticipantByGame(){
+        for(int i=0;i<uniqueGames.length;i++){
+            System.out.println(uniqueGames[i]);
+            ArrayList<Participant> temp=new ArrayList<>();
+            for(int j=0;j<participants.size();j++){
+                //System.out.println(Arrays.toString(participants.get(i).toArray()));
+                if(participants.get(j).getPreferredGame().equals(uniqueGames[i])){
+                    temp.add(participants.get(j));
+                }
+            }
+            for(int j=0;j<temp.size();j++){
+                System.out.println(Arrays.toString(temp.get(j).toArray()));
+            }
+            groupedParticipantsByGame.put(uniqueGames[i],temp );
+            /*for (String key : groupedParticipants.keySet()) {
+                System.out.println(key);
+                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
+            }*/
+        }
+        System.out.println("Grouped By Games");
 
+    }
 }
