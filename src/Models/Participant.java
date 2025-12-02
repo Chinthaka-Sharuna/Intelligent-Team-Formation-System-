@@ -1,10 +1,12 @@
+package Models;
+
 public class Participant {
     private String id;
     private String name;
     private String email;
     private String preferredGame;
     private int skillLevel;
-    private String preferredRole;
+    private Role preferredRole;
     private final int personalityScore;
     private final PersonalityType personalityType;
 
@@ -14,12 +16,12 @@ public class Participant {
         this.email = data[2];
         this.preferredGame = data[3];
         this.skillLevel = Integer.parseInt(data[4]);
-        this.preferredRole = data[5];
+        this.preferredRole = Role.fromString(data[5].trim());
         this.personalityScore = Integer.parseInt(data[6]);
         this.personalityType =  PersonalityType.valueOf(data[7]);
     }
 
-    public Participant(String id, String name, String email,String preferredGame, int skillLevel,String preferredRole,int personalityScore) {
+    public Participant(String id, String name, String email,String preferredGame, int skillLevel,Role preferredRole,int personalityScore) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -29,6 +31,7 @@ public class Participant {
         this.personalityScore = personalityScore;
         this.personalityType = PersonalityType.getPersonalityType(personalityScore);
     }
+
 
     //Getter
     public String getId() {
@@ -51,7 +54,8 @@ public class Participant {
         return skillLevel;
     }
 
-    public String getPreferredRole() {
+
+    public Role getPreferredRole() {
         return preferredRole;
     }
 
@@ -84,21 +88,34 @@ public class Participant {
         this.skillLevel = skillLevel;
     }
 
-    public void setPreferredRole(String preferredRole) {
+    public void setPreferredRole(Role preferredRole) {
         this.preferredRole = preferredRole;
+    }
+
+    public void setPreferredRole(String preferredRole) {
+        this.preferredRole = Role.fromString(preferredRole);
     }
 
     public String[] toArray(){
         String[] data = new String[8];
-        data[0] = this.id;
-        data[1] = this.name;
-        data[2] = this.email;
-        data[3] = this.preferredGame;
-        data[4] = String.valueOf(this.skillLevel);
-        data[5] = this.preferredRole;
-        data[6] = String.valueOf(this.personalityScore);
-        data[7] = String.valueOf(this.personalityType);
+        data[0] = this.getId();
+        data[1] = this.getName();
+        data[2] = this.getEmail();
+        data[3] = this.getPreferredGame();
+        data[4] = String.valueOf(this.getSkillLevel());
+        data[5] = String.valueOf(this.getPreferredRole());
+        data[6] = String.valueOf(this.getPersonalityScore());
+        data[7] = String.valueOf(this.getPersonalityType());
         return data;
+    }
+
+    @Override
+    public String toString() {
+        return name + " (" + id + ") - " + preferredRole + " | Skill: " + skillLevel +  " | Game: " + preferredGame +" | Personality: " + personalityType + "(" + personalityScore + ")";
+    }
+
+    public String toStringALl() {
+        return "id - "+id+"  Name  -  "+name+"  Email  -  "+email+"  PreferredGame  -  "+preferredGame+"  Skill Level  -  "+skillLevel+"  Personality Type  -  "+personalityType+" Preferred Role  -  "+getPreferredRole()+"  Personality Score  -  "+personalityScore+"  Personality Type  -  "+getPersonalityType();
     }
 
 }

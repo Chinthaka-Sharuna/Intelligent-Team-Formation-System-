@@ -1,84 +1,83 @@
+import Models.CSV.CSVLoader;
+import Models.Participant;
+import Models.Role;
+import Models.TeamBuilder;
+
 import java.io.*;
 import java.util.*;
 
 public class Main {
-    public static ArrayList<Participant>  participants=new ArrayList<>();
+    public static Scanner sc=new Scanner(System.in);
+    public static List<Participant>  participants=new ArrayList<>();
     public static  String[] heading=new String[8];
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
-    public static HashMap<String,ArrayList<Participant>> groupedParticipantsByGame=new HashMap<>();
-    //                    game name    PersonalityType
-    public static HashMap<String,HashMap<String,ArrayList<Participant>>> formattedMap=new HashMap<>();
-    public static Scanner sc=new Scanner(System.in);
+    public static HashMap<String, List<Participant>> participantsByPersonalityType=new HashMap<>();
+    public static boolean logged=true;
 
-    public static void main(String[] args) {
 
-        loadData("data/participants_sample.csv");
-        //System.out.print("Team count is "+getTeamCount());
-        //addParticipant();
-        //saveData();
-        //-groupParticipantByPersonalityType();
-        groupParticipantByGame();
-        //sortPlayersBySkill();
-        TeamBuilder tb=new TeamBuilder();
-        tb.teamCreation();
+    public static void main(String[] args) throws IOException {
 
+        CSVLoader loader=new CSVLoader("data/participants_sample.csv");
+        participants=loader.load();
+        System.out.println("Loaded "+participants.size()+" participants");
+        uniqueGames=getUniqueGames().toArray(new String[0]);
+        uniquePreferredRole=getUniquePreferredRole().toArray(new String[0]);
+        groupParticipantByPersonalityType();
+        stateUpMenu();
     }
 
-
-    //Read the csv file
-
-    public static void loadData(String filePath){
-        ArrayList<String[]> temp=new ArrayList<>();
-        ArrayList<String> games=new ArrayList<>();
-        ArrayList<String> roles=new ArrayList<>();
-        try{
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            String line;
-            while((line= reader.readLine())!=null){
-                //System.out.println(line);
-                String[] data=line.split(",");
-                games.add(data[3]);
-                roles.add(data[5]);
-                temp.add(data);
+    private static void stateUpMenu(){
+        System.out.println("Welcome to Intelligent Team Formation System");
+        while(true){
+            System.out.println("------ Main Menu ------");
+            System.out.println("1. Add Participant");
+            System.out.println("2. View Participants");
+            System.out.println("3. Organizer Logging");
+            System.out.println("4. Quit");
+            System.out.print("Enter your choice :- ");
+            switch (Integer.parseInt(sc.nextLine())){
+                case 1:
+                    addParticipant();
+                    break;
+                case 2:
+                    viewParticipant();
+                    break;
+                case 3:
+                    organizerLogging();
+                    organizerMenu();
+                    break;
+                case 4:
+                    System.out.println("-----Quitting-------");
+                    System.out.println("Bye");
+                    System.exit(0);
+                default:
+                    System.out.println("Invalid input");
             }
-        }catch (FileNotFoundException e){
-            System.out.println("Could not locate file: " + e.getMessage());
-        }catch (IOException e){
-            System.out.println("Could not read file: " + e.getMessage());
         }
-        heading = temp.get(0);
-        temp.remove(0);
-        for(String[] data:temp){
-            participants.add(new Participant(data));
-        }
-        System.out.println("File read successfully");
-        Set<String> uniqueSet = new HashSet<>(games.subList(1,games.size()));  //to remove the column value (concatenation)
-        Set<String> uniquePreferredRoleSet = new HashSet<>(roles.subList(1,roles.size()));  //to remove the column value (concatenation)
-        uniqueGames=uniqueSet.toArray(new String[0]);
-        //System.out.println(Arrays.toString(uniqueGames));   //to get unique games values
-        uniquePreferredRole=uniquePreferredRoleSet.toArray(new String[0]); //to get unique roles values
+
     }
-
-    public static void saveData(){
-        String filePath= "data/participants_sample.csv";
-        ArrayList<String[]> temp=new ArrayList<>();
-        try (BufferedWriter writer=new BufferedWriter(new FileWriter(filePath))){
-            writer.write(String.join(",",heading));
-            writer.newLine();
-            for(Participant data:participants){
-                writer.write(String.join(",",data.toArray()));
-                writer.newLine();
-            }
-        }catch (FileNotFoundException e){
-            System.out.println("file not found");
-
-        }catch (IOException e) {
-            System.out.println("IO Error");
+    private static void organizerMenu(){
+        System.out.println("------ Organizer Menu ------");
+        System.out.println("1. Team Formation");
+        System.out.println("2. Quit");
+        System.out.print("Enter your choice :- ");
+        switch (Integer.parseInt(sc.nextLine())){
+            case 1:
+                System.out.println("Welcome to the Team Formation System");
+                System.out.print("Enter group size :- ");
+                int membersCount=Integer.parseInt(sc.nextLine());
+                TeamBuilder teamBuilder=new TeamBuilder(membersCount,participantsByPersonalityType,uniqueGames);
+                break;
+            case 2:
+                System.out.println("-----Quitting-------");
+                System.out.println("Bye");
+                System.exit(0);
+            default:
+                System.out.println("Invalid Input");
         }
     }
-
 
     public static void addParticipant(){
         System.out.println("Adding participant to data list");
@@ -98,14 +97,25 @@ public class Main {
         String preferredGame=getPreferredGame();
         System.out.println(preferredGame);
         int skillLevel=getSkillLevel();
-        String preferredRole=getPreferredRole();
+        Role preferredRole=Role.fromString(getPreferredRole());
         int personalityScore=getPersonalityScore();
         try{
             participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
+            System.out.println("Participation created Successfully");
         }catch (IllegalArgumentException e){
             System.out.println("Invalid Input");
         }
 
+    }
+
+    private static void viewParticipant(){
+        for(Participant participant:participants){
+            System.out.println(participant.toStringALl());
+        }
+    }
+
+    public static String getNewId(){
+        return "P"+String.format("%03d",participants.size()+1);
     }
 
     public static String capitalizerName(String name){
@@ -143,7 +153,7 @@ public class Main {
             try {
                 preferredGameNum = Integer.parseInt(sc.nextLine());
                 if (!(preferredGameNum >= 1 && preferredGameNum <= uniqueGames.length)) {
-                    System.out.println("Invalid input (input must be between 1 and "+uniqueGames.length+")");
+                    System.out.println("Invalid input (input must be between 1 and " + uniqueGames.length + ")");
                     System.out.print("Enter a Valid Game Number :- ");
                     continue;
                 }
@@ -154,6 +164,25 @@ public class Main {
             System.out.print("Enter a Valid Game Number :- ");
         }
         return uniqueGames[preferredGameNum - 1];
+    }
+
+    public static int getSkillLevel(){
+        System.out.print("Enter Skill Level:- ");
+        int skilllevel;
+        while (true) {
+            try{
+                skilllevel= Integer.parseInt(sc.nextLine());
+                if (!(skilllevel >= 1 && skilllevel <= 10)) {
+                    System.out.println("Invalid input (input must be between 1 and 10)");
+                }
+                break;
+            }catch (NumberFormatException | InputMismatchException e) {
+                System.out.println("Input must be a number");
+            }
+            System.out.print("Enter a Valid  Input :- ");
+        }
+
+        return skilllevel;
     }
 
     public static int getPersonalityScore(){
@@ -214,78 +243,190 @@ public class Main {
         return uniquePreferredRole[preferredRoleNum - 1];
     }
 
-    public static String getNewId(){
-        return "P"+String.format("%03d",participants.size()+1);
-    }
-
-    public static int getSkillLevel(){
-        System.out.print("Enter Skill Level:- ");
-        int skilllevel;
-        while (true) {
-            try{
-                skilllevel= Integer.parseInt(sc.nextLine());
-                if (!(skilllevel >= 1 && skilllevel <= 10)) {
-                    System.out.println("Invalid input (input must be between 1 and 10)");
-                }
-                break;
-            }catch (NumberFormatException | InputMismatchException e) {
-                System.out.println("Input must be a number");
+    public static HashSet<String> getUniqueGames(){
+        HashSet<String> uniqueGames=new HashSet<>();
+        for(Participant participant:participants){
+            if(!uniqueGames.contains(participant.getPreferredGame())){
+                uniqueGames.add(participant.getPreferredGame());
             }
-            System.out.print("Enter a Valid  Input :- ");
-        }
-
-        return skilllevel;
+        }return uniqueGames;
     }
 
+    public static HashSet<String> getUniquePreferredRole(){
+        HashSet<String> uniquePreferredRole=new HashSet<>();
+        for(Participant participant:participants){
+            if(!uniquePreferredRole.contains(participant.getPreferredRole())){
+                uniquePreferredRole.add(participant.getPreferredRole().toString());
+            }
+        }return uniquePreferredRole;
+    }
 
-    public static void groupParticipantByGame(){
-        for(int i=0;i<uniqueGames.length;i++){
-            System.out.println(uniqueGames[i]);
-            ArrayList<Participant> temp=new ArrayList<>();
-            for(int j=0;j<participants.size();j++){
-                //System.out.println(Arrays.toString(participants.get(i).toArray()));
-                if(participants.get(j).getPreferredGame().equals(uniqueGames[i])){
+    private static void groupParticipantByPersonalityType() {
+        for (int i = 0; i < uniquePersonalityType.length; i++) {
+            //System.out.println(uniquePersonalityType[i]);
+            ArrayList<Participant> temp = new ArrayList<>();
+            for (int j = 0; j < participants.size(); j++) {
+                if (participants.get(j).getPersonalityType().equals(uniquePersonalityType[i])) {
                     temp.add(participants.get(j));
                 }
             }
-            for(int j=0;j<temp.size();j++){
+            /*for (int j = 0; j < temp.size(); j++) {
                 System.out.println(Arrays.toString(temp.get(j).toArray()));
-            }
-            groupedParticipantsByGame.put(uniqueGames[i],temp );
-            /*for (String key : groupedParticipants.keySet()) {
-                System.out.println(key);
-                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
             }*/
+            participantsByPersonalityType.put(uniquePersonalityType[i], temp);
         }
         System.out.println("Grouped By Games");
-        for(Map.Entry<String,ArrayList<Participant>> entry:groupedParticipantsByGame.entrySet()){
-            formattedMap.put(entry.getKey(),sortPlayersBySkill(groupParticipantByPersonalityType(entry.getValue())));
+    }
+
+    private static void organizerLogging(){
+        Map<String,String> credentials =new HashMap<>();
+        credentials.put("admin","admin");
+        String username;
+        String password;
+        System.out.println("------ Organizer Logging ------");
+        System.out.println("If you want to exit type 'exit'");
+        System.out.print("Please enter your User Name :- ");
+        while(true){
+            try{
+                username=sc.nextLine();
+                if(username.equals("exit")){
+                    break;
+                }
+                System.out.print("Please enter your Password :- ");
+                password=sc.nextLine();
+                if(credentials.containsKey(username)){
+                    if(credentials.get(username).equals(credentials.get(password))){
+                        System.out.println("You have successfully logged in");
+                        logged=true;
+                        break;
+                    }else {
+                        System.out.println("Wrong Password");
+                    }
+                }else{
+                    System.out.println("Invalid Username");
+                }
+
+            }catch (InputMismatchException e){
+                System.out.println("Please enter your User Name :- ");
+            }catch (NullPointerException e){
+                System.out.println("Username or Password is null.");
+            }
         }
 
     }
 
-    public static HashMap<String,ArrayList<Participant>> groupParticipantByPersonalityType(ArrayList<Participant> participantsArray){
-        HashMap<String,ArrayList<Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
-        for(int i=0;i<uniquePersonalityType.length;i++){
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+    public static String[] uniquePreferredRole;
+    public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
+    public static HashMap<String,ArrayList<Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
+    //                    game name    Models.PersonalityType
+    public static HashMap<String,HashMap<String,ArrayList<Participant>>> formattedMap=new HashMap<>();
+    public static Scanner sc=new Scanner(System.in);
+
+    public static void main(String[] args) {
+
+        loadData("data/participants_sample.csv");
+        //System.out.print("Models.Team count is "+getTeamCount());
+        //addParticipant();
+        //saveData();
+        groupParticipantByPersonalityType();
+        //groupParticipantByGame();
+        sortPlayersBySkill(groupedParticipantsByPersonalityType);
+        int memberCount=getPlayerCount();
+        TeamBuilder tb=new TeamBuilder(memberCount,groupedParticipantsByPersonalityType);
+
+    }
+
+
+
+
+
+    public static void groupParticipantByPersonalityType() {
+        for (int i = 0; i < uniquePersonalityType.length; i++) {
             System.out.println(uniquePersonalityType[i]);
-            ArrayList<Participant> temp=new ArrayList<>();
-            for(int j=0;j<participantsArray.size();j++){
-                //System.out.println(Arrays.toString(participants.get(i).toArray()));
-                if(participantsArray.get(j).getPersonalityType().equals(uniquePersonalityType[i])){
-                    temp.add(participantsArray.get(j));
+            ArrayList<Participant> temp = new ArrayList<>();
+            for (int j = 0; j < participants.size(); j++) {
+                if (participants.get(j).getPersonalityType().equals(uniquePersonalityType[i])) {
+                    temp.add(participants.get(j));
                 }
             }
-            for(int j=0;j<temp.size();j++){
+            for (int j = 0; j < temp.size(); j++) {
                 System.out.println(Arrays.toString(temp.get(j).toArray()));
             }
-            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i],temp );
-            /*for (String key : groupedParticipants.keySet()) {
-                System.out.println(key);
-                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
-            }*/
+            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i], temp);
         }
-        System.out.println("Grouped By Personality Type");
-        return groupedParticipantsByPersonalityType;
+        System.out.println("Grouped By Games");
+    }
+
+    public static Integer  getPlayerCount(){
+        int teamCount = 0;
+        System.out.print("How many Players want for each team :- ");
+        while(true){
+            try {
+                teamCount = Integer.parseInt(sc.nextLine());
+                return  teamCount;
+            }catch (NumberFormatException e){
+                System.out.println("Invalid input (input must be a number)");
+                System.out.println("Please enter a valid team number :- ");
+            }catch (InputMismatchException e){
+                System.out.println("Input must be a number");
+                System.out.println("Please enter a valid team number :- ");
+            }
+        }
+
     }
 
     public static HashMap<String,ArrayList<Participant>> sortPlayersBySkill(HashMap<String,ArrayList<Participant>> playerMap ) {
@@ -302,4 +443,67 @@ public class Main {
         }
         return playerMap;
     }
+
 }
+
+
+    /*
+    public static void groupParticipantByGame(){
+        for(int i=0;i<uniqueGames.length;i++){
+            System.out.println(uniqueGames[i]);
+            ArrayList<Models.Participant> temp=new ArrayList<>();
+            for(int j=0;j<participants.size();j++){
+                if(participants.get(j).getPreferredGame().equals(uniqueGames[i])){
+                    temp.add(participants.get(j));
+                }
+            }
+            for(int j=0;j<temp.size();j++){
+                System.out.println(Arrays.toString(temp.get(j).toArray()));
+            }
+            groupedParticipantsByGame.put(uniqueGames[i],temp );
+        }
+        System.out.println("Grouped By Games");
+        for(Map.Entry<String,ArrayList<Models.Participant>> entry:groupedParticipantsByGame.entrySet()){
+            formattedMap.put(entry.getKey(),sortPlayersBySkill(groupParticipantByPersonalityType(entry.getValue())));
+        }
+
+    }
+
+    public static HashMap<String,ArrayList<Models.Participant>> groupParticipantByPersonalityType(ArrayList<Models.Participant> participantsArray){
+        HashMap<String,ArrayList<Models.Participant>> groupedParticipantsByPersonalityType=new HashMap<>();
+        for(int i=0;i<uniquePersonalityType.length;i++){
+            System.out.println(uniquePersonalityType[i]);
+            ArrayList<Models.Participant> temp=new ArrayList<>();
+            for(int j=0;j<participantsArray.size();j++){
+                //System.out.println(Arrays.toString(participants.get(i).toArray()));
+                if(participantsArray.get(j).getPersonalityType().equals(uniquePersonalityType[i])){
+                    temp.add(participantsArray.get(j));
+                }
+            }
+            for(int j=0;j<temp.size();j++){
+                System.out.println(Arrays.toString(temp.get(j).toArray()));
+            }
+            groupedParticipantsByPersonalityType.put(uniquePersonalityType[i],temp );
+            for (String key : groupedParticipants.keySet()) {
+                System.out.println(key);
+                System.out.println(Arrays.toString(groupedParticipants.get(key).toArray()));
+            }
+        }
+        System.out.println("Grouped By Personality Type");
+        return groupedParticipantsByPersonalityType;
+    }
+
+    public static HashMap<String,ArrayList<Models.Participant>> sortPlayersBySkill(HashMap<String,ArrayList<Models.Participant>> playerMap ) {
+        for (Map.Entry<String, ArrayList<Models.Participant>> entry : playerMap.entrySet()) {
+            ArrayList<Models.Participant> players = entry.getValue();
+            players.sort(Comparator.comparingInt(Models.Participant::getSkillLevel).reversed());
+
+            System.out.println("Sorted players for " + entry.getKey() + " by skill level.");
+        }
+        for(Map.Entry<String, ArrayList<Models.Participant>> entry : playerMap.entrySet()){
+            for(Models.Participant p : entry.getValue()){
+                System.out.println(Arrays.toString(p.toArray()));
+            }
+        }
+        return playerMap;
+    }*/
