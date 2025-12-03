@@ -34,8 +34,16 @@ public class Team {
         return members.toArray(new Participant[0]);
     }
 
+    public boolean getValid() {
+        return isValid;
+    }
+
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setValid(boolean isValid) {
+        this.isValid = isValid;
     }
 
 
@@ -74,7 +82,8 @@ public class Team {
     }
 
     public boolean validityChecker(Participant member) {
-        List<Participant> temp = this.members;
+        List<Participant> temp = new ArrayList<>();
+        temp.addAll(members);
         this.members.add(member);
         if(this.isValid()){
             this.members=temp;
@@ -85,9 +94,11 @@ public class Team {
 
 
     }
+
     public double AVGChecker(Participant member) {
         double avg=0;
-        List<Participant> temp = this.members;
+        List<Participant> temp = new ArrayList<>();
+        temp.addAll(this.members);
         this.members.add(member);
         if(this.isValid()){
             avg=this.averageSkill();
@@ -123,17 +134,26 @@ public class Team {
             thinkerValidator.join();
             gameValidator.join();
             roleValidator.join();
+            /*
             if(!leaderValidator.isValid()){
                 System.out.println("Error in the Leader Validator");
             } else if (!thinkerValidator.isValid()) {
                 System.out.println("Error in the Thinker Validator");
             }else if (!roleValidator.isValid()) {
                 System.out.println("Error in the Role Validator");
-            }
+            }*/
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return leaderValidator.isValid() && gameValidator.isValid() && roleValidator.isValid();
+        return leaderValidator.isValid() && thinkerValidator.isValid() && gameValidator.isValid() && roleValidator.isValid();
+    }
+
+    public int roleCounter(){
+        HashMap<String, Integer> roleCounter = new HashMap<>();
+        for(Participant participant : members){
+            roleCounter.put(String.valueOf(participant.getPreferredRole()),roleCounter.getOrDefault(participant.getPreferredRole(),0)+1);
+        }
+        return roleCounter.size();
     }
 
 
@@ -149,7 +169,7 @@ public class Team {
         return sb.toString();
     }
 
-    private static class LeaderValidator extends Thread{
+    private class LeaderValidator extends Thread{
         private List<Participant> participants;
         private boolean isValid;
 
@@ -176,7 +196,7 @@ public class Team {
         }
     }
 
-    private static class ThinkerValidator extends Thread{
+    private class ThinkerValidator extends Thread{
         private List<Participant> participants;
         private boolean isValid=false;
 
@@ -207,7 +227,7 @@ public class Team {
         }
     }
 
-    private static class GameValidator extends Thread{
+    private class GameValidator extends Thread{
         private List<Participant> participants;
         private boolean isValid=false;
         Map<String,Integer> gameCount=new HashMap<>();
@@ -235,7 +255,7 @@ public class Team {
 
     }
 
-    private static class RoleValidator extends Thread{
+    private class RoleValidator extends Thread{
         private List<Participant> participants;
         private boolean isValid=false;
         Map <String,Integer> RoleCount=new HashMap<>();
@@ -262,4 +282,6 @@ public class Team {
         }
 
     }
+
+
 }

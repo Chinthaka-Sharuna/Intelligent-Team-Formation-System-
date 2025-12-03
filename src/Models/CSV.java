@@ -34,50 +34,81 @@ public class CSV {
                 String email = p[2].trim();
                 String preferredGame = p[3].trim();
                 int skillLevel = Integer.parseInt(p[4].trim());
-                Role preferredRole= Role.fromString(p[5].trim());
-                int personalityScore=Integer.parseInt(p[6].trim());
-                list.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
+                Role preferredRole = Role.fromString(p[5].trim());
+                int personalityScore = Integer.parseInt(p[6].trim());
+                list.add(new Participant(id, name, email, preferredGame, skillLevel, preferredRole, personalityScore));
             }
-        }catch (FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             System.out.println("File not found");
             System.out.println(e.getMessage());
-        }catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Error reading file");
             System.out.println(e.getMessage());
-        }catch (ArrayIndexOutOfBoundsException e){
-            System.out.println("There are no compete data in "+id);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("There are no compete data in " + id);
             System.out.println(e.getMessage());
-        }catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             System.out.println("Invalid data format");
             System.out.println(e.getMessage());
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Error loading file");
             System.out.println(e.getMessage());
         }
         return list;
     }
 
-    public void writeParticipant(List<Participant> participants){
+    public void writeParticipant(List<Participant> participants) {
         System.out.println("Writing participants to CSV");
         try (BufferedWriter bw = Files.newBufferedWriter(path)) {
 
             bw.write("ID,Name,Email,PreferredGame,SkillLevel,PreferredRole,PersonalityScore,PersonalityType");
             bw.newLine();
-            for(Participant participant : participants){
-                bw.write(String.join(",",participant.toArray()));
+            for (Participant participant : participants) {
+                bw.write(String.join(",", participant.toArray()));
                 bw.newLine();
             }
-        }catch (FileNotFoundException e){
-        System.out.println("File not found");
-        System.out.println(e.getMessage());
-        }catch (IOException e){
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
             System.out.println("Error writing file");
             System.out.println(e.getMessage());
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Error loading file");
             System.out.println(e.getMessage());
         }
         System.out.println("Participants written to CSV");
+    }
+
+    public void saveTeams(Team[] teams) {
+        System.out.println("Writing teams to CSV");
+        try (BufferedWriter bw = Files.newBufferedWriter(path)) {
+
+            bw.write("TeamID,ID,Name,Email,PreferredGame,SkillLevel,PreferredRole,PersonalityScore,PersonalityType");
+            bw.newLine();
+            for (Team team : teams) {
+                if(team.getValid()==true){
+                    for(Participant participant: team.getTeamMembers()){
+                        bw.write(team.getName()+",");
+                        bw.write(String.join(",", participant.toArray()));
+                        bw.newLine();
+                    }
+                    bw.write("SUMMARY,Avg Skill: "+(float)team.averageSkill()+",Unique Roles: "+team.roleCounter());
+                    bw.newLine();
+                }
+
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error writing file");
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error loading file");
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Teams written to CSV");
     }
 
 }

@@ -6,21 +6,20 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    public static Scanner sc=new Scanner(System.in);
+    public final static Scanner sc=new Scanner(System.in);
     public static List<Participant>  participants=new ArrayList<>();
     public static  String[] heading=new String[8];
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
     public static HashMap<String, List<Participant>> participantsByPersonalityType=new HashMap<>();
-    public static CSV csv=new CSV("data/participants_sample.csv");
+    public static CSV participantsCSV=new CSV("data/participants_sample.csv");
 
     public static void main(String[] args) throws IOException {
-        participants=csv.load();
+        participants=participantsCSV.load();
         System.out.println("Loaded "+participants.size()+" participants");
         uniqueGames=getUniqueGames().toArray(new String[0]);
         uniquePreferredRole=getUniquePreferredRole().toArray(new String[0]);
-        groupParticipantByPersonalityType();
         stateUpMenu();
     }
 
@@ -42,7 +41,8 @@ public class Main {
                         viewParticipant();
                         break;
                     case 3:
-                        if(organizerLogging()){
+                        //if(organizerLogging()){
+                        if(true){
                             organizerMenu();
                         }
                         break;
@@ -74,7 +74,9 @@ public class Main {
                 System.out.println("Welcome to the Team Formation System");
                 System.out.print("Enter group size :- ");
                 int membersCount=Integer.parseInt(sc.nextLine());
-                TeamBuilder teamBuilder=new TeamBuilder(membersCount,participantsByPersonalityType,uniqueGames);
+                float globalAVG=calculatGlobaleAVG();
+                groupParticipantByPersonalityType();
+                TeamBuilder teamBuilder=new TeamBuilder(membersCount,globalAVG,participantsByPersonalityType,uniqueGames);
                 break;
             case 2:
                 System.out.println("-----Quitting-------");
@@ -95,6 +97,7 @@ public class Main {
         System.out.print("Please enter your User Name :- ");
         while(true){
             try{
+
                 username=sc.nextLine();
                 if(username.equals("exit")){
                     return false;
@@ -111,11 +114,13 @@ public class Main {
                 }else{
                     System.out.println("Invalid Username");
                 }
+                System.out.print("Please Re-enter your User Name :- ");
 
             }catch (InputMismatchException e){
-                System.out.println("Please enter your User Name :- ");
+                System.out.print("Please Re-enter your User Name :- ");
             }catch (NullPointerException e){
                 System.out.println("Username or Password is null.");
+                System.out.print("Please Re-enter your User Name :- ");
             }
         }
 
@@ -127,6 +132,10 @@ public class Main {
         System.out.println("Your ID is "+id);
         System.out.print("Enter Name:- ");
         String name=capitalizerName(sc.nextLine());
+        if(isDuplication(name)){
+            System.out.println("Name is duplicated");
+            return;
+        }
         System.out.println(name);
         System.out.print("Enter Email:- ");
         String email=sc.nextLine();
@@ -143,7 +152,7 @@ public class Main {
         try{
             participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
             System.out.println("Participation created Successfully");
-            csv.writeParticipant(participants);
+            participantsCSV.writeParticipant(participants);
         }catch (IllegalArgumentException e){
             System.out.println("Invalid Input");
         }
@@ -320,8 +329,23 @@ public class Main {
         System.out.println("Grouped By Games");
     }
 
+    private static float calculatGlobaleAVG(){
+        double globalAvg=0;
+        for(Participant participant:participants){
+            globalAvg+=participant.getSkillLevel();
+        }
+        globalAvg=globalAvg/participants.size();
+        return (float) globalAvg;
+    }
 
-
+    private static boolean isDuplication(String name){
+        for(Participant participant:participants){
+            if(participant.getName().equals(name)){
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
 

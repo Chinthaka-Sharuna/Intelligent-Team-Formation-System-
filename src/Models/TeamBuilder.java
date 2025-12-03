@@ -1,4 +1,6 @@
 package Models;
+import com.sun.tools.javac.Main;
+
 import java.util.*;
 
 
@@ -12,15 +14,17 @@ public class TeamBuilder {
     private List<Participant> otherPlayers;
     private HashMap<Participant, Participant> CoupledParticipants=new HashMap<>();
     private String[] uniqueGames;
+    private float globalAVG;
 
 
 
-    public TeamBuilder(int membersCountEachTeam,HashMap<String,List<Participant>> participants,String[] uniqueGames) {
+    public TeamBuilder(int membersCountEachTeam,float globalAVG,HashMap<String,List<Participant>> participants,String[] uniqueGames) {
         this.membersCountEachTeam = membersCountEachTeam;
         this.totalNumberOfPlayers =countParticipants(participants) ;
         this.numberOfTeams=totalNumberOfPlayers/membersCountEachTeam;
         this.teams = new Team[numberOfTeams];
         this.uniqueGames = uniqueGames;
+        this.globalAVG=globalAVG;
         leaders =groupCreationValidatorOnLeader(participants.get("Leader"));
         Participant[] temp=groupCreationValidatorOnLThinker(participants.get("Thinker"));
         thinkers=Arrays.copyOfRange(temp,temp.length-numberOfTeams,temp.length);
@@ -28,13 +32,18 @@ public class TeamBuilder {
         leftOvers.addAll(Arrays.asList(Arrays.copyOfRange(temp,0,temp.length-numberOfTeams)));
         leftOvers.addAll(participants.get("Balanced"));
         otherPlayers= sortParticipantsAscending(leftOvers);
-        System.out.println("Team Builder initialized");
         teamCreator();
         teamCoupler();
         sortTeamsDescending();
-        reorderMiddleOut();
+        teamFiller();
         validator();
-        System.out.println("Team Coupler initialized");
+        Scanner sc=new Scanner(System.in);
+        System.out.println("Do you Want to export formatted Teams? (Y/N)");
+        String choise= sc.nextLine();
+        if(choise.equalsIgnoreCase("Y")||choise.equalsIgnoreCase("yes")){
+            CSV teamCSV=new CSV("data/formed_teams.csv");
+            teamCSV.saveTeams(teams);
+        }
 
     }
 
@@ -147,7 +156,7 @@ public class TeamBuilder {
                 CoupledParticipants.put(leaders[i], thinkers[i]);
                 teams[i].addMember(leaders[i]);
                 teams[i].addMember(thinkers[i]);
-                System.out.println(teams[i].averageSkill());
+                //System.out.println(teams[i].averageSkill());
                 ;
             }
         }catch (IndexOutOfBoundsException e){
@@ -177,47 +186,61 @@ public class TeamBuilder {
 
     private void validator(){
         for(int i=0;i<teams.length;i++){
-            System.out.println(teams[i].toString());
-            System.out.println(teams[i].isValid());
+            if((membersCountEachTeam==teams[i].getSize())&&(teams[i].isValid())){
+                teams[i].setValid(true);
+                System.out.println(teams[i].toString());
+            }
         }
     }
 
-    private void reorderMiddleOut() {
+    private void teamFiller() {
         for(Team team:teams){
+            //System.out.println(team.toString());
             int middle=otherPlayers.size()/2;
+            int current;
             double range=0.5;
             double teamAVGSkill=team.averageSkill();
             double upperValue=teamAVGSkill+range;
             double lowerValue=teamAVGSkill-range;
             boolean leftChecked=false;
             int distance=0;
-            System.out.println("Middle Value is "+middle);
-            System.out.println(team.averageSkill());
+            //System.out.println("Middle Value is "+middle);
+            //System.out.println(team.averageSkill());
             try {
                 Participant player=null;
                 while(team.getSize()<membersCountEachTeam){
-                    if(leftChecked) {
-                        player = otherPlayers.get(middle+distance);
+                    if(leftChecked){
+                        current=middle+distance;
                         distance++;
-                    }else {
-                        player = otherPlayers.get(middle-distance);
+                        leftChecked=false;
+                    }else{
+                        current=middle-distance;
                         leftChecked=true;
                     }
-                    if ((player.getSkillLevel() <= upperValue) && (player.getSkillLevel() >= lowerValue)) {
-                        if (team.validityChecker(otherPlayers.get(middle))) {
-                            team.addMember(otherPlayers.get(middle));
-                            otherPlayers.remove(middle);
+                    player = otherPlayers.get(current);
+                    if (!team.isIn(player)) {
+                        if (team.validityChecker(otherPlayers.get(current))) {
+                            team.addMember(otherPlayers.get(current));
+                            otherPlayers.remove(current);
+                            teamAVGSkill=team.averageSkill();
+                            upperValue=teamAVGSkill+range;
+                            lowerValue=teamAVGSkill-range;
+                            leftChecked=false;
+                            distance=0;
                         }
                     }
 
                 }
-                System.out.println(team.averageSkill());
+                //System.out.println(team.averageSkill());
             } catch (IndexOutOfBoundsException e) {
-                System.out.println("Process complete");
+                continue;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
     }
+
+
+
 }
