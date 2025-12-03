@@ -1,4 +1,4 @@
-import Models.CSV.CSVLoader;
+import Models.CSV;
 import Models.Participant;
 import Models.Role;
 import Models.TeamBuilder;
@@ -13,13 +13,10 @@ public class Main {
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
     public static HashMap<String, List<Participant>> participantsByPersonalityType=new HashMap<>();
-    public static boolean logged=true;
-
+    public static CSV csv=new CSV("data/participants_sample.csv");
 
     public static void main(String[] args) throws IOException {
-
-        CSVLoader loader=new CSVLoader("data/participants_sample.csv");
-        participants=loader.load();
+        participants=csv.load();
         System.out.println("Loaded "+participants.size()+" participants");
         uniqueGames=getUniqueGames().toArray(new String[0]);
         uniquePreferredRole=getUniquePreferredRole().toArray(new String[0]);
@@ -36,27 +33,37 @@ public class Main {
             System.out.println("3. Organizer Logging");
             System.out.println("4. Quit");
             System.out.print("Enter your choice :- ");
-            switch (Integer.parseInt(sc.nextLine())){
-                case 1:
-                    addParticipant();
-                    break;
-                case 2:
-                    viewParticipant();
-                    break;
-                case 3:
-                    organizerLogging();
-                    organizerMenu();
-                    break;
-                case 4:
-                    System.out.println("-----Quitting-------");
-                    System.out.println("Bye");
-                    System.exit(0);
-                default:
-                    System.out.println("Invalid input");
+            try{
+                switch (Integer.parseInt(sc.nextLine())){
+                    case 1:
+                        addParticipant();
+                        break;
+                    case 2:
+                        viewParticipant();
+                        break;
+                    case 3:
+                        if(organizerLogging()){
+                            organizerMenu();
+                        }
+                        break;
+                    case 4:
+                        System.out.println("-----Quitting-------");
+                        System.out.println("Bye");
+                        System.exit(0);
+                    default:
+                        System.out.println("Invalid input");
+                }
+            }catch (NumberFormatException e){
+                System.out.println("Invalid input");
+                System.out.println("Input must be an integer");
+            }catch (Exception e){
+                System.out.println("Invalid input");
             }
+
         }
 
     }
+
     private static void organizerMenu(){
         System.out.println("------ Organizer Menu ------");
         System.out.println("1. Team Formation");
@@ -78,9 +85,44 @@ public class Main {
         }
     }
 
+    private static boolean organizerLogging(){
+        Map<String,String> credentials =new HashMap<>();
+        credentials.put("admin","admin");
+        String username;
+        String password;
+        System.out.println("------ Organizer Logging ------");
+        System.out.println("If you want to exit type 'exit'");
+        System.out.print("Please enter your User Name :- ");
+        while(true){
+            try{
+                username=sc.nextLine();
+                if(username.equals("exit")){
+                    return false;
+                }
+                System.out.print("Please enter your Password :- ");
+                password=sc.nextLine();
+                if(credentials.containsKey(username)){
+                    if(credentials.get(username).equals(credentials.get(password))){
+                        System.out.println("You have successfully logged in");
+                        return true;
+                    }else {
+                        System.out.println("Wrong Password");
+                    }
+                }else{
+                    System.out.println("Invalid Username");
+                }
+
+            }catch (InputMismatchException e){
+                System.out.println("Please enter your User Name :- ");
+            }catch (NullPointerException e){
+                System.out.println("Username or Password is null.");
+            }
+        }
+
+    }
+
     public static void addParticipant(){
         System.out.println("Adding participant to data list");
-        String[] data=new String[8];
         String id=getNewId();
         System.out.println("Your ID is "+id);
         System.out.print("Enter Name:- ");
@@ -101,6 +143,7 @@ public class Main {
         try{
             participants.add(new Participant(id,name,email,preferredGame,skillLevel,preferredRole,personalityScore));
             System.out.println("Participation created Successfully");
+            csv.writeParticipant(participants);
         }catch (IllegalArgumentException e){
             System.out.println("Invalid Input");
         }
@@ -178,7 +221,7 @@ public class Main {
             }catch (NumberFormatException | InputMismatchException e) {
                 System.out.println("Input must be a number");
             }
-            System.out.print("Enter a Valid  Input :- ");
+            System.out.print("Enter a Valid Skill Level :- ");
         }
 
         return skilllevel;
@@ -277,42 +320,8 @@ public class Main {
         System.out.println("Grouped By Games");
     }
 
-    private static void organizerLogging(){
-        Map<String,String> credentials =new HashMap<>();
-        credentials.put("admin","admin");
-        String username;
-        String password;
-        System.out.println("------ Organizer Logging ------");
-        System.out.println("If you want to exit type 'exit'");
-        System.out.print("Please enter your User Name :- ");
-        while(true){
-            try{
-                username=sc.nextLine();
-                if(username.equals("exit")){
-                    break;
-                }
-                System.out.print("Please enter your Password :- ");
-                password=sc.nextLine();
-                if(credentials.containsKey(username)){
-                    if(credentials.get(username).equals(credentials.get(password))){
-                        System.out.println("You have successfully logged in");
-                        logged=true;
-                        break;
-                    }else {
-                        System.out.println("Wrong Password");
-                    }
-                }else{
-                    System.out.println("Invalid Username");
-                }
 
-            }catch (InputMismatchException e){
-                System.out.println("Please enter your User Name :- ");
-            }catch (NullPointerException e){
-                System.out.println("Username or Password is null.");
-            }
-        }
 
-    }
 
 }
 
