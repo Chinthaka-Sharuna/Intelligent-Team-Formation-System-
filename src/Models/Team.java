@@ -1,9 +1,6 @@
 package Models;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Team {
     private String name;
@@ -95,18 +92,66 @@ public class Team {
 
     }
 
-    public double AVGChecker(Participant member) {
+    public void removeMemberById(String participantId) {
+        if (members == null || members.isEmpty() || participantId == null) {
+            return;
+        }
+        for(int i=0;i<members.size();i++){
+            if(members.get(i).getId().equals(participantId)){
+                members.remove(i);
+            }
+        }
+    }
+
+    public Participant getLowestSkilledPlayer() {
+        if (members == null || members.isEmpty()) {
+            return null;
+        }
+        Participant minPlayer = members.get(0);
+        for (Participant p : members) {
+            if (p.getSkillLevel() < minPlayer.getSkillLevel()) {
+                minPlayer = p;
+            }
+        }
+
+        return minPlayer;
+    }
+
+    public Participant getHighestSkilledPlayer() {
+        if (members == null || members.isEmpty()) {
+            return null;
+        }
+        Participant maxPlayer = members.get(0);
+        for (Participant p : members) {
+            if (p.getSkillLevel() > maxPlayer.getSkillLevel()) {
+                maxPlayer = p;
+            }
+        }
+        return maxPlayer;
+    }
+
+    public void sortMembersBySkill(boolean descending) {
+        if (members == null || members.isEmpty()) {
+            return;
+        }
+        Comparator<Participant> skillComparator = Comparator.comparingInt(Participant::getSkillLevel);
+        if (descending) {
+            skillComparator = skillComparator.reversed();
+        }
+
+        members.sort(skillComparator);
+
+    }
+
+    public float AVGChecker(Participant member) {
         double avg=0;
         List<Participant> temp = new ArrayList<>();
         temp.addAll(this.members);
         this.members.add(member);
-        if(this.isValid()){
-            avg=this.averageSkill();
-            this.members=temp;
-            return avg;
-        }
+        avg=this.averageSkill();
         this.members=temp;
-        return  0;
+        return (float) avg;
+
 
 
     }

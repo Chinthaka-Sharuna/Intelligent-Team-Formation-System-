@@ -1,8 +1,5 @@
 package Models;
-import com.sun.tools.javac.Main;
-
 import java.util.*;
-
 
 public class TeamBuilder {
     private Team[] teams;
@@ -15,7 +12,7 @@ public class TeamBuilder {
     private HashMap<Participant, Participant> CoupledParticipants=new HashMap<>();
     private String[] uniqueGames;
     private float globalAVG;
-
+    private List<Team> inValidTeamList = new ArrayList<>();
 
 
     public TeamBuilder(int membersCountEachTeam,float globalAVG,HashMap<String,List<Participant>> participants,String[] uniqueGames) {
@@ -37,6 +34,8 @@ public class TeamBuilder {
         sortTeamsDescending();
         teamFiller();
         validator();
+        sortTeamsBySkill(true);
+        teamViewer();
         Scanner sc=new Scanner(System.in);
         System.out.println("Do you Want to export formatted Teams? (Y/N)");
         String choise= sc.nextLine();
@@ -164,6 +163,26 @@ public class TeamBuilder {
         }
     }
 
+
+
+    public void sortTeamsBySkill(boolean descending) {
+        List<Team> validTeamList = new ArrayList<>();
+        for (Team team : teams) {
+            if (team != null && team.getValid()) {
+                validTeamList.add(team);
+            }else {
+                inValidTeamList.add(team);
+            }
+        }
+        this.teams = validTeamList.toArray(new Team[0]);
+        Comparator<Team> skillComparator = Comparator.comparingDouble(Team::averageSkill);
+        if (descending) {
+            skillComparator = skillComparator.reversed();
+        }
+        Arrays.sort(teams, skillComparator);
+        System.out.println("Teams sorted by Average Skill (" + (descending ? "High to Low" : "Low to High") + ")");
+    }
+
     private HashMap<String,Participant[]> groupParticipantByGame(List<Participant> participants){
         HashMap<String,Participant[]> groupedParticipants=new HashMap<>();
         for(int i=0;i<uniqueGames.length;i++){
@@ -188,7 +207,7 @@ public class TeamBuilder {
         for(int i=0;i<teams.length;i++){
             if((membersCountEachTeam==teams[i].getSize())&&(teams[i].isValid())){
                 teams[i].setValid(true);
-                System.out.println(teams[i].toString());
+                //System.out.println(teams[i].toString());
             }
         }
     }
@@ -239,6 +258,12 @@ public class TeamBuilder {
             }
         }
 
+    }
+
+    private void teamViewer(){
+        for(Team team:teams){
+            System.out.println(team.toString());
+        }
     }
 
 

@@ -8,25 +8,30 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CSV {
-    private final Path path;
+    private Path path;
 
     public CSV(String path) {
+        this.path = Paths.get(path);
+    }
+
+    public void setPath(String path){
         this.path = Paths.get(path);
     }
 
     public List<Participant> load() {
         List<Participant> list = new ArrayList<>();
         String id = "";
-        try (BufferedReader br = Files.newBufferedReader(path)) {
+        try {
+            BufferedReader br = Files.newBufferedReader(path);
             String line;
             br.readLine();
             while ((line = br.readLine()) != null) {
                 String[] p = line.split(",");
-                if (p.length < 8) {
+                Validator validator = new Validator(p);
+                if(!validator.isValid()){
                     continue;
                 }
                 id = p[0].trim();
@@ -109,6 +114,78 @@ public class CSV {
             System.out.println(e.getMessage());
         }
         System.out.println("Teams written to CSV");
+    }
+
+    private class Validator {
+        boolean valid;
+        String[] data;
+        public Validator( String[] data) {
+            this.data = data;
+            LenghtValidator lenghtValidator = new LenghtValidator();
+            SkillLevelValidator skillLevelValidator = new SkillLevelValidator();
+            PersonalityScoreValidator  personalityScoreValidator = new PersonalityScoreValidator();
+            lenghtValidator.start();
+            skillLevelValidator.start();
+            personalityScoreValidator.start();
+            try{
+                lenghtValidator.join();
+                skillLevelValidator.join();
+                personalityScoreValidator.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            valid = (lenghtValidator.valid)&&(skillLevelValidator.valid)&&(personalityScoreValidator.valid);
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        private class LenghtValidator extends Thread{
+            protected boolean valid=false;
+            @Override
+            public void run(){
+                if(data.length==8){
+                    valid=true;
+                }
+            }
+
+            protected boolean isValid(){
+                return valid;
+            }
+        }
+
+        private class   SkillLevelValidator extends Thread{
+            protected boolean valid=false;
+
+            protected boolean isValid(){
+                return valid;
+            }
+
+            @Override
+            public void run(){
+                if((Integer.parseInt(data[4].trim())>0)&&(Integer.parseInt(data[4].trim())<=10)) {
+                    valid = true;
+                }
+            }
+
+        }
+
+        private class PersonalityScoreValidator extends Thread{
+            protected boolean valid=false;
+
+            protected boolean isValid(){
+                return valid;
+            }
+
+            @Override
+            public void run(){
+                if((Integer.parseInt(data[6].trim())>0)&&(Integer.parseInt(data[6].trim())<=100)) {
+                    valid = true;
+                }
+            }
+        }
+
     }
 
 }

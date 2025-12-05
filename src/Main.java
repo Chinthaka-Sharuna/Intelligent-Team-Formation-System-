@@ -3,19 +3,20 @@ import Models.Participant;
 import Models.Role;
 import Models.TeamBuilder;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Main {
     public final static Scanner sc=new Scanner(System.in);
     public static List<Participant>  participants=new ArrayList<>();
-    public static  String[] heading=new String[8];
     public static String[] uniqueGames;
     public static String[] uniquePreferredRole;
     public static String[] uniquePersonalityType={"Leader","Balanced","Thinker"};
     public static HashMap<String, List<Participant>> participantsByPersonalityType=new HashMap<>();
     public static CSV participantsCSV=new CSV("data/participants_sample.csv");
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         participants=participantsCSV.load();
         System.out.println("Loaded "+participants.size()+" participants");
         uniqueGames=getUniqueGames().toArray(new String[0]);
@@ -41,8 +42,7 @@ public class Main {
                         viewParticipant();
                         break;
                     case 3:
-                        //if(organizerLogging()){
-                        if(true){
+                        if(organizerLogging()){
                             organizerMenu();
                         }
                         break;
@@ -72,6 +72,28 @@ public class Main {
         switch (Integer.parseInt(sc.nextLine())){
             case 1:
                 System.out.println("Welcome to the Team Formation System");
+                System.out.println("Do you want to import own CSV(if you dont want to import leave it blank )");
+                System.out.print("Enter the absolute path of csv file :-");
+                try{
+                    String path=sc.nextLine();
+                    if(!path.isEmpty()){
+                        if(!path.endsWith(".csv")){
+                            path=path+".csv";
+                        }
+                        if(Files.exists(Paths.get(path))){
+                            participantsCSV.setPath(path);
+                            participants=participantsCSV.load();
+                            System.out.println("Loaded "+participants.size()+" participants");
+                            uniqueGames=getUniqueGames().toArray(new String[0]);
+                            uniquePreferredRole=getUniquePreferredRole().toArray(new String[0]);
+                        }else{
+                            System.out.println("There is no such file or directory");
+                        }
+                    }
+
+                }catch (Exception e){
+                    System.out.println("Invalid input");
+                }
                 System.out.print("Enter group size :- ");
                 int membersCount=Integer.parseInt(sc.nextLine());
                 float globalAVG=calculatGlobaleAVG();
@@ -160,9 +182,21 @@ public class Main {
     }
 
     private static void viewParticipant(){
-        for(Participant participant:participants){
-            System.out.println(participant.toStringALl());
+        System.out.print("Enter the Participant ID :- ");
+        try{
+            String id=sc.nextLine();
+            for(Participant participant:participants){
+                if(participant.getId().equals(id)){
+                    System.out.println(participant.toStringALl());
+                    return;
+                }
+            }
+            System.out.println("ID not found");
+
+        }catch (IllegalArgumentException e){
+            System.out.println("Invalid Input");
         }
+
     }
 
     public static String getNewId(){
@@ -172,7 +206,6 @@ public class Main {
     public static String capitalizerName(String name){
         String[] temp=name.split(" ");
         //System.out.println(Arrays.toString(temp));
-        name="";
         for(int i=0;i<temp.length;i++){
             //System.out.println(temp[i].length());
             if (temp[i].isEmpty()){
@@ -297,18 +330,14 @@ public class Main {
     public static HashSet<String> getUniqueGames(){
         HashSet<String> uniqueGames=new HashSet<>();
         for(Participant participant:participants){
-            if(!uniqueGames.contains(participant.getPreferredGame())){
-                uniqueGames.add(participant.getPreferredGame());
-            }
+            uniqueGames.add(participant.getPreferredGame());
         }return uniqueGames;
     }
 
     public static HashSet<String> getUniquePreferredRole(){
         HashSet<String> uniquePreferredRole=new HashSet<>();
         for(Participant participant:participants){
-            if(!uniquePreferredRole.contains(participant.getPreferredRole())){
-                uniquePreferredRole.add(participant.getPreferredRole().toString());
-            }
+            uniquePreferredRole.add(participant.getPreferredRole().toString());
         }return uniquePreferredRole;
     }
 
